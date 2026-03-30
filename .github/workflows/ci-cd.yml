@@ -34,8 +34,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      - name: Check dependencies
+        run: uv pip list
+
       - name: Run tests
-        run: uv pip list && pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short
 
       # - name: Upload coverage reports
       #   if: always()
