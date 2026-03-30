@@ -38,7 +38,7 @@ jobs:
         run: uv pip list
 
       - name: Run tests
-        run: python -m pytest tests/ -v --tb=short
+        run: uv run pytest tests/ -v --tb=short
 
       # - name: Upload coverage reports
       #   if: always()
