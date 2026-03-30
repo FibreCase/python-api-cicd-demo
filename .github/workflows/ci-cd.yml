@@ -128,11 +128,10 @@ jobs:
         env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
         run: |
-
-          # mkdir -p ~/.ssh
-          # echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
-          # chmod 600 ~/.ssh/deploy_key
-          # ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no user@server 'cd /path && docker-compose pull && docker-compose up -d'
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 55522 fibre@ssh.a.fibrecase.pp.ua 'cd //home/fibre/python-api-cicd-demo && docker compose pull && docker compose up -d'
 
           echo "✅ Deployment completed successfully!"
 

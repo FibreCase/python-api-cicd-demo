@@ -1,0 +1,11 @@
+
+name: beijing
+
+services:
+  api:
+    image: ghcr.io/fibrecase/python-api-cicd-demo
+    container_name: python-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
