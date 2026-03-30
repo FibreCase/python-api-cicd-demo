@@ -1,6 +1,8 @@
 # Simple HTTP Backend
 
-一个基于 Python 标准库实现的简单 HTTP 后端，无需安装第三方依赖。
+一个基于 Python 标准库实现的简单 HTTP 后端，无需安装第三方依赖。  
+该项目主要用于学习CI/CD流程和日志输出，实现了从python代码到容器镜像的全流程自动化构建，
+并通过 Github Action 自动部署新版本到服务器。
 
 ## Edit to Trigger
 

@@ -1,9 +1,10 @@
 
-name: beijing
+name: api-demo
 
 services:
   api:
     image: ghcr.io/fibrecase/python-api-cicd-demo
+    # image: ghcr.nju.edu.cn/fibrecase/python-api-cicd-demo # In China, you can use this mirror registry
     container_name: python-api
     ports:
       - "8000:8000"
