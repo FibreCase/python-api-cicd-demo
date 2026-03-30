@@ -1,0 +1,74 @@
+name: Deploy to Production
+
+# 仅在推送标签时触发（生产环境）
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+      
+      - name: Set deployment variables
+        id: vars
+        run: |
+          BRANCH=${{ github.event.workflow_run.head_branch }}
+          SHA=${{ github.event.workflow_run.head_sha }}
+          IMAGE_TAG=${SHA:0:7}
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+      
+      - name: Deploy to server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          IMAGE_TAG: ${{ steps.vars.outputs.image_tag }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts
+          
+          # 连接到服务器并执行部署命令
+          ssh -i ~/.ssh/id_rsa ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
+            cd $DEPLOY_PATH
+            docker pull ghcr.io/${{ github.repository_owner }}/python-api-cicd-demo:${IMAGE_TAG}
+            docker-compose up -d
+          EOF
+      
+      - name: Health check
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          for i in {1..30}; do
+            if curl -f $APP_URL/health > /dev/null 2>&1; then
+              echo "✅ Application is healthy!"
+              exit 0
+            fi
+            echo "Attempt $i/30: Waiting for application to be ready..."
+            sleep 10
+          done
+          echo "❌ Health check failed after 30 attempts"
+          exit 1
+      
+      - name: Slack notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Deployment ${{ job.status }} for ${{ github.repository }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author,action,eventName,ref
